@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AI_AStarCraft", "AI_AStarCraft\AI_AStarCraft.csproj", "{023E28D4-40BF-43A0-B181-D3851DEB4BBA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{023E28D4-40BF-43A0-B181-D3851DEB4BBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{023E28D4-40BF-43A0-B181-D3851DEB4BBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{023E28D4-40BF-43A0-B181-D3851DEB4BBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{023E28D4-40BF-43A0-B181-D3851DEB4BBA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
