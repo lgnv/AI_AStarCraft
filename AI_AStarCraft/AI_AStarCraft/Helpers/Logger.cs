@@ -8,16 +8,26 @@ namespace AI_AStarCraft.Helpers
 
         public Logger()
         {
-            this.logs = new StringBuilder("{\"data\":[");
+            this.logs = new StringBuilder("{\"data\": {");
         }
 
-        public void Log(string data)
-            => logs.Append($"{data},");
+        public void Log(string data, bool withSeparator = true)
+        {
+            logs.Append($"{data}");
+            if (withSeparator)
+                logs.Append(",");
+        }
+
+        //todo lgnv: это бред, потом уберу
+        public void RemoveLastChar()
+        {
+            logs.Remove(logs.Length - 1, 1);
+        }
 
         public string Build()
         {
             logs.Remove(logs.Length - 1, 1);
-            logs.Append("]}");
+            logs.Append("}}");
             return logs.ToString();
         }
     }

@@ -43,6 +43,14 @@ namespace AI_AStarCraft.Simulations.AStarCraft
 
         }
 
+        public override string ToString()
+        {
+            var direction = Direction.HasValue
+                ? @$", ""direction"": ""{Direction.Value}"""
+                : "";
+            return @$"{{""x"":{Location.X}, ""y"":{Location.Y}{direction} }}";
+        }
+
         public override void Interact(GameObject other) { }
     }
 }

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
+using AI_AStarCraft.Helpers;
 
 namespace AI_AStarCraft.Simulations.AStarCraft
 {
@@ -44,6 +45,11 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             var map = ParseCells(dto.Map);
             var robots = dto.Robots.Select(Automaton2000.Create);
             return new Map(robots, map);
+        }
+
+        public string ToJson()
+        {
+            return $@"[{Cells.Select(c => c.Value.ToString()).StrJoin(",")}]";
         }
     }
 }

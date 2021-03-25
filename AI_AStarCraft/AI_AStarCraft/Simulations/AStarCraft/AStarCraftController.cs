@@ -27,11 +27,14 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             ApplySolution(solution, map);
             
             var state = new AStarCraftState(map);
+            Logger.Log(@"""history"": [", false);
             while (!state.IsFinished())
             {
                 state.Tick();
                 Logger.Log(state.ToString());
             }
+            Logger.RemoveLastChar();
+            Logger.Log("]");
         }
 
         private static Map ApplySolution(AStarCraftSolution solution, Map map)
