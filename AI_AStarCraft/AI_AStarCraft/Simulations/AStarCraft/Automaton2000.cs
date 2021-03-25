@@ -42,6 +42,11 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             }
         }
 
+        public override string ToString()
+        {
+            return $@"{{""id"":{Id},""x"":{Location.X},""y"":{Location.Y},""direction"":""{Direction}""}}";
+        }
+
         // Принимает строку вида X Y Direction, где X, Y -- числа, Direction -- {L, R, U, D}
         public static Automaton2000 Create(string str)
         {

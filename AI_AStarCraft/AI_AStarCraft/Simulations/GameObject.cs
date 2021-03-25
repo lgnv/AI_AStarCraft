@@ -4,11 +4,12 @@ namespace AI_AStarCraft.Simulations
 {
     public abstract class GameObject
     {
-        public Guid Id { get; }
+        public int Id { get; }
+        private static int number;
         
         protected GameObject()
         {
-            Id = Guid.NewGuid();
+            Id = number++;
         }
 
         public abstract void Interact(GameObject other);

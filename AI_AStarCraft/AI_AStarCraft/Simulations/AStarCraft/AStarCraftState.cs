@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AI_AStarCraft.Helpers;
 
 namespace AI_AStarCraft.Simulations.AStarCraft
 {
     public class AStarCraftState
     {
-        public Dictionary<Automaton2000, HashSet<(Vector2, Direction)>> MovementHistory { get; }
-        public Map Map { get; }
+        private Dictionary<Automaton2000, HashSet<(Vector2, Direction)>> MovementHistory { get; }
+        private Map Map { get; }
+        private int TickCount { get; set; }
 
         public AStarCraftState(Map map)
         {
@@ -32,11 +34,13 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 if (Map.Cells.TryGetValue(newLocation, out var currentCell))
                     automaton2000.Interact(currentCell);
             }
+
+            TickCount++;
         }
 
         public override string ToString()
         {
-            return string.Join(", ", Map.Automaton2000s.Select(x => $"[{x.Id} - {x.Location} - {x.Broken}]"));
+            return $@"{{""i"": {TickCount},""robots"":[{Map.Automaton2000s.Select(x => x.ToString()).StrJoin(",")}]}}";
         }
     }
 }

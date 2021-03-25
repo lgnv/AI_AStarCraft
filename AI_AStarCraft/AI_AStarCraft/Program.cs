@@ -1,4 +1,6 @@
-﻿using AI_AStarCraft.Simulations.AStarCraft;
+﻿using System.IO;
+using AI_AStarCraft.Helpers;
+using AI_AStarCraft.Simulations.AStarCraft;
 
 namespace AI_AStarCraft
 {
@@ -10,15 +12,13 @@ namespace AI_AStarCraft
             ""Robots"": [ ""7 8 L"", ""7 1 L"", ""17 1 L"", ""14 5 R"" ]
         }
 ";
-            /// <summary>
-            ///  
-            /// </summary>
-            /// <param name="args"></param>
         static void Main(string[] args)
         {
             var map = Map.ParseMap(testJson);
-            var controller = new AStarCraftController();
-            AStarCraftController.Play(map);
+            var logger = new Logger();
+            var controller = new AStarCraftController(logger);
+            controller.Play(map);
+            File.WriteAllText("1.json", logger.Build());
         }
     }
 }

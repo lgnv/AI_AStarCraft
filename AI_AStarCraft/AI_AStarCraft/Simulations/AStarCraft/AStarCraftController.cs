@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using AI_AStarCraft.Helpers;
 
 namespace AI_AStarCraft.Simulations.AStarCraft
 {
@@ -11,21 +12,25 @@ namespace AI_AStarCraft.Simulations.AStarCraft
     
     public class AStarCraftController
     {
-        public static void Play(Map map)
+        private readonly Logger Logger;
+
+        public AStarCraftController(Logger logger)
+        {
+            Logger = logger;
+        }
+
+        public void Play(Map map)
         {
             var problem = new AStarCraftProblem(map);
             var solution = new AStarCraftSolver().GetSolutions(problem).First();
-            
+
             ApplySolution(solution, map);
             
             var state = new AStarCraftState(map);
             while (!state.IsFinished())
             {
                 state.Tick();
-                // Чтобы понять, что работает
-                Console.WriteLine(state.ToString());
-                Console.WriteLine();
-                //
+                Logger.Log(state.ToString());
             }
         }
 
