@@ -1,34 +1,34 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace AI_AStarCraft.Helpers
 {
     public class Logger
     {
-        private StringBuilder logs;
+        private readonly Dictionary<string, List<string>> logs;
 
         public Logger()
         {
-            this.logs = new StringBuilder("{\"data\": {");
+            logs = new Dictionary<string, List<string>>();
         }
 
-        public void Log(string data, bool withSeparator = true)
+        public void Log(string key, string data)
         {
-            logs.Append($"{data}");
-            if (withSeparator)
-                logs.Append(",");
-        }
-
-        //todo lgnv: это бред, потом уберу
-        public void RemoveLastChar()
-        {
-            logs.Remove(logs.Length - 1, 1);
+            if (!logs.ContainsKey(key))
+                logs[key] = new List<string>();
+            logs[key].Add(data);
         }
 
         public string Build()
         {
-            logs.Remove(logs.Length - 1, 1);
-            logs.Append("}}");
-            return logs.ToString();
+            var stringBuilder = new StringBuilder(@"{""data"":{");
+            stringBuilder.AppendJoin(",", logs.Select(kvp => Build(kvp.Key)));
+            stringBuilder.Append("}}");
+            return stringBuilder.ToString();
         }
+
+        private string Build(string key)
+            => @$"""{key}"":[{logs[key].StrJoin(",")}]";
     }
 }

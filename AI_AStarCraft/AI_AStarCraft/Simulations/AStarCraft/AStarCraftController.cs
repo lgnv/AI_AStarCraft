@@ -12,11 +12,11 @@ namespace AI_AStarCraft.Simulations.AStarCraft
     
     public class AStarCraftController
     {
-        private readonly Logger Logger;
+        private readonly Logger logger;
 
         public AStarCraftController(Logger logger)
         {
-            Logger = logger;
+            this.logger = logger;
         }
 
         public void Play(Map map)
@@ -27,14 +27,11 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             ApplySolution(solution, map);
             
             var state = new AStarCraftState(map);
-            Logger.Log(@"""history"": [", false);
             while (!state.IsFinished())
             {
                 state.Tick();
-                Logger.Log(state.ToString());
+                logger.Log("history", state.ToString());
             }
-            Logger.RemoveLastChar();
-            Logger.Log("]");
         }
 
         private static Map ApplySolution(AStarCraftSolution solution, Map map)

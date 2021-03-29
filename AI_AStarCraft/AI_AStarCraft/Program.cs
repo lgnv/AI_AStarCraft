@@ -16,7 +16,7 @@ namespace AI_AStarCraft
         {
             var map = Map.ParseMap(testJson);
             var logger = new Logger();
-            logger.Log($@"""map"": {map.ToJson()}");
+            logger.Log("map", map.ToJson());
             var controller = new AStarCraftController(logger);
             controller.Play(map);
             File.WriteAllText("1.json", logger.Build());
