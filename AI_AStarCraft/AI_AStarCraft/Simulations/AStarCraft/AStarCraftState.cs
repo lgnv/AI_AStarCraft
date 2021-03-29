@@ -22,7 +22,6 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public bool IsFinished()
             => Map.Automaton2000s.All(a => a.Broken);
 
-        // todo lgnv: запоминать MovementHistory и убивать если есть уже место где мы были в текущем положении
         public void Tick()
         {
             if (IsFinished())
@@ -31,6 +30,9 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             {
                 var automaton2000 = Map.Automaton2000s[i];
                 var newLocation = automaton2000.Move();
+                if (MovementHistory[automaton2000].Contains((newLocation, automaton2000.Direction)))
+                    automaton2000.Break();
+                MovementHistory[automaton2000].Add((newLocation, automaton2000.Direction));
                 if (Map.Cells.TryGetValue(newLocation, out var currentCell))
                     automaton2000.Interact(currentCell);
             }
