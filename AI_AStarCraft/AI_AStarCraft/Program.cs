@@ -20,6 +20,7 @@ namespace AI_AStarCraft
             var controller = new AStarCraftController(logger);
             controller.Play(map);
             File.WriteAllText("1.json", logger.Build());
+            Visualization.Visualization.Draw(testJson);
         }
     }
 }

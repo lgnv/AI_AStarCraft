@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/vue"></script>
+    <script src="main.js"></script>
+    <script src="vis.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <title>A*Craft</title>
+</head>
+<body>
+    <div id="app">
+        <table>
+            <tr v-for="row,x in table">
+                <td v-for="v,y in row" v-bind:style="getStyle(x,y)"></td>
+            </tr>
+        </table>
+        <h3>{{step}}</h3>
+    </div>
+</body>
+<script>
+    app = new Vue(app);
+</script>
+</html>
