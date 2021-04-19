@@ -8,9 +8,10 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public double Score { get; }
         public Arrow[] Arrows { get; }
 
-        public AStarCraftSolution(Arrow[] arrows)
+        public AStarCraftSolution(Arrow[] arrows, double score)
         {
             Arrows = arrows;
+            Score = score;
         }
     }
 }

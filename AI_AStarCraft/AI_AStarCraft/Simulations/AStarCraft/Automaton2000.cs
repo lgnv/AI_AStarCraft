@@ -4,15 +4,29 @@ namespace AI_AStarCraft.Simulations.AStarCraft
 {
     public class Automaton2000: GameObject
     {
-        public Vector2 Location { get; private set; }
-        public Direction Direction { get; private set; }
-        public bool Broken { get; private set; }
-        
+        public Vector2 Location { get; set; }
+        public Direction Direction { get; set; }
+        public bool Broken { get; set; }
+
+
+        public Vector2 OriginalLocation { get; private set; }
+        public Direction OriginalDirection { get; private set; }
+
         public Automaton2000(Vector2 location, Direction direction, bool isBroken = false)
         {
             Location = location;
             Direction = direction;
             Broken = isBroken;
+            OriginalLocation = new Vector2(location.X, location.Y);
+            if (direction == Direction.Up)
+                OriginalDirection = Direction.Up;
+            if (direction == Direction.Down)
+                OriginalDirection = Direction.Down;
+            if (direction == Direction.Right)
+                OriginalDirection = Direction.Right;
+            if (direction == Direction.Left)
+                OriginalDirection = Direction.Left;
+
         }
 
         // todo lgnv: нужно знать размеры поля, чтобы брать модуль от поля(поле зациклено)
@@ -20,8 +34,16 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         {
             if (Broken)
                 return Location;
-            Location = Vector2.Add(Location, Direction.GetShift());
-            return Location;
+            var newloc = Vector2.Add(Location, Direction.GetShift());
+            //Location = Vector2.Add(Location, Direction.GetShift());
+            return newloc;
+        }
+
+        public void Reset()
+        {
+            Location = OriginalLocation;
+            Direction = OriginalDirection;
+            Broken = false;
         }
 
         public void Break()
@@ -35,9 +57,13 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             {
                 case Cell cell:
                     if (!cell.IsPlatform)
+                    {
                         Break();
+                    }
                     if (cell.Direction.HasValue)
+                    {
                         Direction = cell.Direction.Value;
+                    }
                     break;
             }
         }

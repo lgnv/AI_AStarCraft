@@ -38,7 +38,9 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         {
             // todo lgnv: возможно переделать на то, чтобы не менять я возврашать новое
             foreach (var arrow in solution.Arrows)
+            {
                 map.Cells[arrow.Location].Direction = arrow.Direction;
+            }
             return map;
         }
     }

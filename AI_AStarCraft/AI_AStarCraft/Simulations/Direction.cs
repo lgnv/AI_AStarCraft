@@ -6,9 +6,9 @@ namespace AI_AStarCraft.Simulations
     public enum Direction
     {
         Up = 'U',
-        Down = 'D',
         Left = 'L',
-        Right = 'R'
+        Right = 'R',
+        Down = 'D'
     }
 
     public static class DirectionExtensions

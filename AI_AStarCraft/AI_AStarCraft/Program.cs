@@ -15,11 +15,26 @@ namespace AI_AStarCraft
         static void Main(string[] args)
         {
             var map = Map.ParseMap(testJson);
-            var logger = new Logger();
-            logger.Log("map", map.ToJson());
-            var controller = new AStarCraftController(logger);
-            controller.Play(map);
-            File.WriteAllText("1.json", logger.Build());
+            var problem = new AStarCraftProblem(map);
+            var solution = new AStarCraftSolver().GetSolutions(problem);
+            //var logger = new Logger();
+            //logger.Log("map", map.ToJson());
+            //var controller = new AStarCraftController(logger);
+            //controller.Play(map);
+            //File.WriteAllText("1.json", logger.Build());
         }
     }
 }
+
+/*
+ ""###################
+   #......L###......L#
+   #.#########.#######
+   #.#########.#######
+   #.#########.#######
+   #.#########.##R...#
+   #.#########.#####.#
+   #.#########.#####.#
+   #......L###.......#
+   ###################"",
+ * */
