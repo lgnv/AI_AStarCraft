@@ -46,8 +46,13 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                     if (CurrentArrowsLists.Count > 0)
                         FindBestSolution(problem, CurrentArrowsLists.Pop());
                     else
+                    {
+                        AnalyseStart(Map.Automaton2000s.ToList());
+                        if (CurrentArrowsLists.Count > 0)
+                            FindBestSolution(problem, CurrentArrowsLists.Pop());
+                    }
                         break;
-                }                
+                }            
             }
             catch (TimeoutException)
             {
@@ -59,13 +64,56 @@ namespace AI_AStarCraft.Simulations.AStarCraft
 
         }
 
+        public void ResetGame(HashSet<Arrow> arrows)
+        {
+            for (var i = 0; i < Map.Automaton2000s.Length; i++)
+            {
+                var automaton2000 = Map.Automaton2000s[i];
+                automaton2000.Reset();
+            }
+            foreach (var key in Map.Cells.Keys)
+            {
+                if (!Map.Cells[key].IsOriginallyArrow)
+                    Map.Cells[key].Direction = null;
+                Map.Cells[key].IsCrossed = 0;
+            }
+            foreach (var arrow in arrows)
+            {
+                Map.Cells[arrow.Location].Direction = arrow.Direction;
+                for (var i = 0; i < Map.Automaton2000s.Length; i++)
+                {
+                    var automaton2000 = Map.Automaton2000s[i];
+                    if (automaton2000.Location == arrow.Location)
+                    {
+                        automaton2000.Direction = arrow.Direction;
+                    }
+                }
+            }
+
+
+            for (var i = 0; i < Map.Automaton2000s.Length; i++)
+            {
+                var automaton2000 = Map.Automaton2000s[i];
+
+                MovementHistory[automaton2000].Add((automaton2000.Location, automaton2000.Direction));
+                Map.Cells[automaton2000.Location].IsCrossed = 1;
+            }
+
+            MovementHistory.Clear();
+            MovementHistory = Map
+                .Automaton2000s
+                .ToDictionary(a => a, a => new HashSet<(Vector2, Direction)>());
+        }
         
         public void FindBestSolution(AStarCraftProblem problem, HashSet<Arrow> arrows)
         {            
             var arrowsSetsList = new List<HashSet<Arrow>>();
             var broken = new List<Automaton2000>();
             var brokenCount = 0;
-            if (timer.ElapsedMilliseconds > 3600) throw new TimeoutException();
+            if (timer.ElapsedMilliseconds > 500) throw new TimeoutException();
+
+            ResetGame(arrows);
+            /*
             for (var i = 0; i < Map.Automaton2000s.Length; i++)
             {
                 var automaton2000 = Map.Automaton2000s[i];
@@ -89,7 +137,8 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                     }
                 }
             }
-            
+
+
             for (var i = 0; i < Map.Automaton2000s.Length; i++)
             {
                 var automaton2000 = Map.Automaton2000s[i];
@@ -102,6 +151,8 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             MovementHistory = Map
                 .Automaton2000s
                 .ToDictionary(a => a, a => new HashSet<(Vector2, Direction)>());
+            */
+
 
             currentScore = 0;
             while (!IsFinished())
@@ -129,7 +180,8 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             if (currentScore > maxScore)
             {
                 maxScore = currentScore;                
-                maxArrows = arrows.ToArray();              
+                maxArrows = arrows.ToArray();
+                Console.WriteLine(maxScore);
             }            
         }
 
@@ -188,7 +240,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 {
                     broken.Broken = true;
                     broken.Analized = true;
-                    return arrows;
+                    continue;
                 }
                 
                 foreach (var direct in Enum.GetValues(typeof(Direction)))
@@ -215,6 +267,55 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             }            
             return arrows;
         }
+
         
+        
+        public void AnalyseStart(List<Automaton2000> robots)
+        {
+            ResetGame(new HashSet<Arrow>());
+            var arrows = new HashSet<Arrow>();
+            foreach (var broken in robots)
+            {                
+                if (Map.Cells[broken.Location].IsOriginallyArrow)
+                {
+                    continue;
+                }
+
+                foreach (var direct in Enum.GetValues(typeof(Direction)))
+                {
+                    broken.Direction = (Direction)direct;
+                    var newLocation = broken.Move();
+                    if (Map.Cells.TryGetValue(newLocation, out var currentCell))
+                    {
+                        if (currentCell.IsPlatform)
+                        {
+                            if (currentCell.Direction == null)
+                            {
+                                arrows.Add(new Arrow(broken.Location, (Direction)direct));
+                            }
+                           
+                        }
+                    }
+                }
+                //broken.Broken = true;
+                //broken.Analized = true;
+            }
+
+
+
+
+
+
+            if (arrows.Count > 0)
+            {
+                var newList = new HashSet<Arrow>();
+                foreach (var newarrow in arrows)
+                {                    
+                    newList.Add(newarrow);                    
+                }
+                CurrentArrowsLists.Push(newList);
+            }
+        }        
+
     }
 }
