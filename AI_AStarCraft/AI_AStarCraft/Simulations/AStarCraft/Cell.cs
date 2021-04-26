@@ -9,6 +9,10 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public Vector2 Location { get; }
         public Direction? Direction { get; set; }
         public bool IsPlatform { get; }
+
+        public int IsCrossed { get; set; }
+
+        public bool IsOriginallyArrow { get; set; }
         
         private static Dictionary<char, Func<Vector2, Cell>> createByCharacter = new Dictionary<char, Func<Vector2, Cell>>
         {
@@ -25,6 +29,13 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             this.Location = location;
             this.IsPlatform = isPlatform;
             this.Direction = direction;
+            if (this.Direction != null)
+            {
+                this.IsOriginallyArrow = true;
+            }
+            else
+                this.IsOriginallyArrow = false;
+            this.IsCrossed = 0;
         }
 
         public static Cell Create(Vector2 location, char symbol)

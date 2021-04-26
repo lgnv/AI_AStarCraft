@@ -21,12 +21,14 @@ namespace AI_AStarCraft.Simulations.AStarCraft
 
         static int triesNumber;
 
-        public HashSet<HashSet<Arrow>> ExistingVariantsHash { get; set; }
-        //static List<Arrow> arrows = new List<Arrow>();
+        public HashSet<HashSet<Arrow>> ExistingVariantsHash { get; set; }        
+
+        public Stack<HashSet<Arrow>> CurrentArrowsLists;
 
         
         public IEnumerable<AStarCraftSolution> GetSolutions(AStarCraftProblem problem)
         {
+            CurrentArrowsLists = new Stack<HashSet<Arrow>>();
             triesNumber = 0;
             ExistingVariantsHash = new HashSet<HashSet<Arrow>>();
             maxScore = 0;
@@ -35,34 +37,35 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 .Automaton2000s
                 .ToDictionary(a => a, a => new HashSet<(Vector2, Direction)>());
 
-            timer = Stopwatch.StartNew();
-            //yield return new AStarCraftSolution(new []{ new Arrow(new Vector2(1, 8), Direction.Down) });
+            timer = Stopwatch.StartNew();           
             try
             {
                 FindBestSolution(problem, new HashSet<Arrow>());
-                Console.WriteLine(maxScore);
-                var solution = new AStarCraftSolution(maxArrows, maxScore);
-                return new List<AStarCraftSolution>() { solution };
+                while (true)
+                {                    
+                    if (CurrentArrowsLists.Count > 0)
+                        FindBestSolution(problem, CurrentArrowsLists.Pop());
+                    else
+                        break;
+                }                
             }
             catch (TimeoutException)
             {
                 Console.Error.WriteLine("timeout ");
-                return null;
-            }
+                Console.WriteLine(maxScore);
+            }                                    
+            var solution = new AStarCraftSolution(maxArrows, maxScore);
+            return new List<AStarCraftSolution>() { solution };
 
         }
 
-
-        //public IEnumerable<AStarCraftSolution> FindBestSolution(AStarCraftProblem problem, List<Arrow> arrows)
-        //public void FindBestSolution(AStarCraftProblem problem, List<Arrow> arrows)
-        //public IEnumerable<AStarCraftSolution> FindBestSolution(AStarCraftProblem problem, List<Arrow> arrows)
+        
         public void FindBestSolution(AStarCraftProblem problem, HashSet<Arrow> arrows)
-        {
+        {            
             var arrowsSetsList = new List<HashSet<Arrow>>();
             var broken = new List<Automaton2000>();
             var brokenCount = 0;
-            //if (timer.ElapsedMilliseconds > 990) throw new TimeoutException();
-            //if (timer.ElapsedMilliseconds > 3000) throw new TimeoutException();
+            if (timer.ElapsedMilliseconds > 3600) throw new TimeoutException();
             for (var i = 0; i < Map.Automaton2000s.Length; i++)
             {
                 var automaton2000 = Map.Automaton2000s[i];
@@ -70,13 +73,30 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             }
             foreach (var key in Map.Cells.Keys)
             {
-                Map.Cells[key].Direction = null;
+                if (!Map.Cells[key].IsOriginallyArrow)
+                    Map.Cells[key].Direction = null;
+                Map.Cells[key].IsCrossed = 0;
             }
             foreach (var arrow in arrows)
             {
-                Map.Cells[arrow.Location].Direction = arrow.Direction;
+                Map.Cells[arrow.Location].Direction = arrow.Direction;                
+                for (var i = 0; i < Map.Automaton2000s.Length; i++)
+                {
+                    var automaton2000 = Map.Automaton2000s[i];
+                    if (automaton2000.Location == arrow.Location)
+                    {
+                        automaton2000.Direction = arrow.Direction;                  
+                    }
+                }
             }
+            
+            for (var i = 0; i < Map.Automaton2000s.Length; i++)
+            {
+                var automaton2000 = Map.Automaton2000s[i];
 
+                MovementHistory[automaton2000].Add((automaton2000.Location, automaton2000.Direction));
+                Map.Cells[automaton2000.Location].IsCrossed = 1;
+            }
 
             MovementHistory.Clear();
             MovementHistory = Map
@@ -92,52 +112,35 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 if (broken.Count > brokenCount)
                 {
                     var newarrows = Analyse(broken);
-                    /*
-                    Console.WriteLine("arrows");
-                    foreach(var arrow in arrows)
-                    {
-                        Console.WriteLine("arrow point" + arrow.Location + " " + arrow.Direction);
-                    }
-                    */
-                    arrowsSetsList.Add(newarrows);
-                    brokenCount++;
+                    if (newarrows.Count > 0)
+                    {                        
+                        foreach (var newarrow in newarrows)
+                        {                            
+                            var newList = new HashSet<Arrow>(arrows);
+                            newList.Add(newarrow);
+                            CurrentArrowsLists.Push(newList);
+                        }
+                    }                    
+                    var oldBroken = brokenCount;
+                    brokenCount = broken.Count - oldBroken;
                 }
                 
             }
             if (currentScore > maxScore)
             {
-                maxScore = currentScore;
-                maxArrows = arrows.ToArray();
-                Console.WriteLine(maxScore);
-                Console.WriteLine("triesNumber " + triesNumber);
-                for (var i = 0; i < Map.Automaton2000s.Length; i++)
-                {
-                    var automaton2000 = Map.Automaton2000s[i];
-                    Console.WriteLine("start " + automaton2000.OriginalLocation.ToString());
-                    Console.WriteLine("end " + automaton2000.Location.ToString());
-                    Console.WriteLine("pathLength " + MovementHistory[automaton2000].Count);
-                }
-                foreach (var arrow in arrows)
-                {
-                    Console.WriteLine("arrow point" + arrow.Location + " " + arrow.Direction);
-                }
-            }
-            //var longestRobot = MovementHistory.FirstOrDefault(x => x.Value == MovementHistory.Values.Max()).Key;
-            //Console.WriteLine("currentScore " + currentScore.ToString());
-            foreach(var arrowset in arrowsSetsList)
+                maxScore = currentScore;                
+                maxArrows = arrows.ToArray();              
+            }            
+        }
+
+        public void WriteCurrentArrows(HashSet<Arrow> arrows)
+        {
+            Console.WriteLine("current arrows:");
+            foreach(var arrow in arrows)
             {
-                //if (!ExistingVariantsHash.Contains(arrowset))
-                //{
-                //    ExistingVariantsHash.Add(arrowset);
-                    triesNumber++;
-                    
-                    FindBestSolution(problem, arrowset);
-                   
-                //}
+                Console.Write(arrow.Location + " " + arrow.Direction + " ");
             }
-            //Console.WriteLine(maxScore);
-            //var solution = new AStarCraftSolution(maxArrows, maxScore);
-            //return new List<AStarCraftSolution>() { solution};
+            Console.WriteLine(" ");
         }
 
         public bool IsFinished()
@@ -146,19 +149,14 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public void Tick()
         {
             if (IsFinished())
-                return;
-            //Console.WriteLine("new Round");
+                return;           
             for (var i = 0; i < Map.Automaton2000s.Length; i++)
             {
-                var automaton2000 = Map.Automaton2000s[i];
-                //Console.WriteLine("automaton2000 old");
-                //Console.WriteLine(automaton2000.Location.X.ToString() + " " + automaton2000.Location.Y.ToString());
-                //Console.WriteLine(automaton2000.Direction);
+                var automaton2000 = Map.Automaton2000s[i];                
 
                 if (automaton2000.Broken)
                     continue;
-                var newLocation = automaton2000.Move();
-                //Console.WriteLine("new location " + newLocation.ToString());
+                var newLocation = automaton2000.Move();                
                 var oldDirection = automaton2000.Direction;
                 if (Map.Cells.TryGetValue(newLocation, out var currentCell))
                     automaton2000.Interact(currentCell);
@@ -172,42 +170,30 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                     }
                     automaton2000.Location = newLocation;
                     MovementHistory[automaton2000].Add((newLocation, automaton2000.Direction));
-                    /*
-                    try
-                    {
-                        MovementHistory[automaton2000].Add((newLocation, automaton2000.Direction));
-                    }
-                    catch(Exception ex)
-                    {
-                        Console.WriteLine("exception " + ex.Message);
-                    }
-                    */
-                    currentScore++;
-                    //Console.WriteLine("automaton2000 new");
-                    //Console.WriteLine(automaton2000.Location.X.ToString() + " " + automaton2000.Location.Y.ToString());
-                    //Console.WriteLine(automaton2000.Direction);
-                }
-
-                //currentScore++;
-                //if (MovementHistory[automaton2000].Contains((newLocation, automaton2000.Direction)))
-                //    automaton2000.Break();
-                //MovementHistory[automaton2000].Add((newLocation, automaton2000.Direction));
-                //if (Map.Cells.TryGetValue(newLocation, out var currentCell))
-                //    automaton2000.Interact(currentCell);
+                    Map.Cells[newLocation].IsCrossed++;
+                    currentScore++;                    
+                }                
             }
         }
 
         public HashSet<Arrow> Analyse(List<Automaton2000> brokenList)
         {
-            var arrows = new HashSet<Arrow>();
+            var arrows = new HashSet<Arrow>();            
             foreach (var broken in brokenList)
             {
-                //Console.WriteLine("variants for " + broken.Location.ToString());
-                broken.Broken = false;
+                if (broken.Analized)
+                    continue;
+                broken.Broken = false;                
+                if (Map.Cells[broken.Location].IsCrossed > 1 || Map.Cells[broken.Location].IsOriginallyArrow)
+                {
+                    broken.Broken = true;
+                    broken.Analized = true;
+                    return arrows;
+                }
+                
                 foreach (var direct in Enum.GetValues(typeof(Direction)))
                 {
-                    broken.Direction = (Direction)direct;
-                    //Console.WriteLine("new direction for " + broken.Location.ToString() + " " + broken.Direction.ToString());
+                    broken.Direction = (Direction)direct;                    
                     var newLocation = broken.Move();
                     if (Map.Cells.TryGetValue(newLocation, out var currentCell))
                     {
@@ -216,20 +202,19 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                             if (currentCell.Direction == null)
                             {
                                 arrows.Add(new Arrow(broken.Location, (Direction)direct));
-                                broken.Broken = true;
-                                break;
                             }
                             else if (!MovementHistory[broken].Contains((newLocation, currentCell.Direction.Value)))
                             {
-                                arrows.Add(new Arrow(broken.Location, (Direction)direct));
-                                broken.Broken = true;
-                                break;
+                                arrows.Add(new Arrow(broken.Location, (Direction)direct));                                
                             }
                         }
                     }
                 }
-            }
+            broken.Broken = true;
+            broken.Analized = true;
+            }            
             return arrows;
         }
+        
     }
 }

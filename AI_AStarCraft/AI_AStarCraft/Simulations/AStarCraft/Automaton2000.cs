@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace AI_AStarCraft.Simulations.AStarCraft
 {
@@ -7,6 +8,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public Vector2 Location { get; set; }
         public Direction Direction { get; set; }
         public bool Broken { get; set; }
+        public bool Analized { get; set; }
 
 
         public Vector2 OriginalLocation { get; private set; }
@@ -17,6 +19,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             Location = location;
             Direction = direction;
             Broken = isBroken;
+            Analized = false;
             OriginalLocation = new Vector2(location.X, location.Y);
             if (direction == Direction.Up)
                 OriginalDirection = Direction.Up;
@@ -33,8 +36,16 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public Vector2 Move()
         {
             if (Broken)
-                return Location;
+                return Location;            
             var newloc = Vector2.Add(Location, Direction.GetShift());
+            if (newloc.X < 0)
+                newloc.X = 19 + newloc.X;
+            if (newloc.X > 18)
+                newloc.X = 19 - newloc.X;
+            if (newloc.Y < 0)
+                newloc.Y = 10 + newloc.Y;
+            if (newloc.Y > 9)
+                newloc.Y = 10 - newloc.Y;
             //Location = Vector2.Add(Location, Direction.GetShift());
             return newloc;
         }
@@ -44,6 +55,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             Location = OriginalLocation;
             Direction = OriginalDirection;
             Broken = false;
+            Analized = false;
         }
 
         public void Break()
