@@ -40,19 +40,33 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             timer = Stopwatch.StartNew();           
             try
             {
-                FindBestSolution(problem, new HashSet<Arrow>());
+                AnalyseStart(Map.Automaton2000s.ToList());
+                FindBestSolution(problem, new HashSet<Arrow>(), false);
                 while (true)
                 {                    
                     if (CurrentArrowsLists.Count > 0)
-                        FindBestSolution(problem, CurrentArrowsLists.Pop());
+                        FindBestSolution(problem, CurrentArrowsLists.Pop(), false);
                     else
                     {
-                        AnalyseStart(Map.Automaton2000s.ToList());
-                        if (CurrentArrowsLists.Count > 0)
-                            FindBestSolution(problem, CurrentArrowsLists.Pop());
-                    }
                         break;
-                }            
+                        //AnalyseStart(Map.Automaton2000s.ToList());
+                        //if (CurrentArrowsLists.Count > 0)
+                        //    FindBestSolution(problem, CurrentArrowsLists.Pop(), false);
+                    }
+                }
+                FindBestSolution(problem, new HashSet<Arrow>(maxArrows), true);
+                AnalyseCells(problem);
+                //Console.WriteLine("lc length is " + lc.Count.ToString());
+                /*
+                var newHash = new HashSet<Arrow>(maxArrows);
+                foreach (var newarrow in lc)
+                {
+                    //Console.WriteLine("newarrow " + newarrow.Location + " " + newarrow.Direction);
+                    var newAdditionalHash = new HashSet<Arrow>(newHash);
+                    newAdditionalHash.Add(newarrow);
+                    FindBestSolution(problem, newAdditionalHash, true);
+                }
+                */
             }
             catch (TimeoutException)
             {
@@ -105,7 +119,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 .ToDictionary(a => a, a => new HashSet<(Vector2, Direction)>());
         }
         
-        public void FindBestSolution(AStarCraftProblem problem, HashSet<Arrow> arrows)
+        public void FindBestSolution(AStarCraftProblem problem, HashSet<Arrow> arrows, bool isFinal)
         {            
             var arrowsSetsList = new List<HashSet<Arrow>>();
             var broken = new List<Automaton2000>();
@@ -160,23 +174,30 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 Tick();
                 
                 broken = Map.Automaton2000s.Where(x => x.Broken).ToList();
-                if (broken.Count > brokenCount)
+                if (!isFinal)
                 {
-                    var newarrows = Analyse(broken);
-                    if (newarrows.Count > 0)
-                    {                        
-                        foreach (var newarrow in newarrows)
-                        {                            
-                            var newList = new HashSet<Arrow>(arrows);
-                            newList.Add(newarrow);
-                            CurrentArrowsLists.Push(newList);
+                    if (broken.Count > brokenCount)
+                    {
+                        var newarrows = Analyse(broken);
+                        if (newarrows.Count > 0)
+                        {
+                            foreach (var newarrow in newarrows)
+                            {
+                                var newList = new HashSet<Arrow>(arrows);
+                                newList.Add(newarrow);
+                                CurrentArrowsLists.Push(newList);
+                            }
                         }
-                    }                    
-                    var oldBroken = brokenCount;
-                    brokenCount = broken.Count - oldBroken;
+                        var oldBroken = brokenCount;
+                        brokenCount = broken.Count - oldBroken;
+                    }
                 }
                 
             }
+            //if (isFinal)
+            //{
+            //    Console.WriteLine("currentscore " + currentScore);                
+            //}
             if (currentScore > maxScore)
             {
                 maxScore = currentScore;                
@@ -300,12 +321,6 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 //broken.Broken = true;
                 //broken.Analized = true;
             }
-
-
-
-
-
-
             if (arrows.Count > 0)
             {
                 var newList = new HashSet<Arrow>();
@@ -315,7 +330,123 @@ namespace AI_AStarCraft.Simulations.AStarCraft
                 }
                 CurrentArrowsLists.Push(newList);
             }
-        }        
+        }
+        
+
+        public void AnalyseCells(AStarCraftProblem problem)
+        {
+            CurrentArrowsLists = new Stack<HashSet<Arrow>>();
+            var brokenList = Map.Automaton2000s.Where(x => x.Broken).ToList();
+            var lc = new List<Arrow>();
+            var newStack = new Stack<(Vector2, Direction)>();
+            var last = brokenList.First();            
+            var count = 0;
+            foreach (var move in MovementHistory[last])
+            {
+                if (count > 10)
+                    break;
+                newStack.Push(move);
+                count++;
+            }
+            while (newStack.Count != 0)
+            {
+                var old = newStack.Pop();
+                foreach (var direct in Enum.GetValues(typeof(Direction)))
+                {
+                    if (Map.Cells[old.Item1].Direction != null)
+                        continue;
+                    if ((Direction)direct != old.Item2)
+                    {
+                        var newlock = GetNear(old.Item1, (Direction)direct);
+                        if (Map.Cells[newlock].IsPlatform)
+                        {                            
+                            var newList = new HashSet<Arrow>(maxArrows);
+                            newList.Add(new Arrow(old.Item1, (Direction)direct));
+                            CurrentArrowsLists.Push(newList);                            
+                        }
+                    }
+                }
+            }            
+            var oldMaxScore = maxScore;
+            var brokenId = 0;
+            while (true)
+            {
+                if (CurrentArrowsLists.Count > 0)
+                    FindBestSolution(problem, CurrentArrowsLists.Pop(), false);
+                else
+                {
+                    if (maxScore > oldMaxScore)
+                    {
+                        oldMaxScore = maxScore;                        
+                        FindBestSolution(problem, new HashSet<Arrow>(maxArrows), true);
+                    }
+                    else
+                    {
+                        while (CurrentArrowsLists.Count == 0)
+                        {
+                            brokenId++;
+                            if (brokenId >= brokenList.Count)
+                                return;
+                            GetNewArrows(brokenId);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void GetNewArrows(int brokenId)
+        {
+            var brokenList = Map.Automaton2000s.Where(x => x.Broken).ToList();
+            var lc = new List<Arrow>();
+            var newStack = new Stack<(Vector2, Direction)>();
+            if (brokenId >= brokenList.Count)
+                return;
+            var last = brokenList[brokenId];
+
+            //Console.WriteLine("last " + last.OriginalLocation);
+            var count = 0;
+            foreach (var move in MovementHistory[last])
+            {
+                if (count > 20)
+                    break;
+                newStack.Push(move);
+                count++;
+            }
+            while (newStack.Count != 0)
+            {
+                var old = newStack.Pop();
+                foreach (var direct in Enum.GetValues(typeof(Direction)))
+                {
+                    if (Map.Cells[old.Item1].Direction != null)
+                        continue;
+                    if ((Direction)direct != old.Item2)
+                    {
+                        var newlock = GetNear(old.Item1, (Direction)direct);
+                        if (Map.Cells[newlock].IsPlatform)
+                        {                            
+                            var newList = new HashSet<Arrow>(maxArrows);
+                            newList.Add(new Arrow(old.Item1, (Direction)direct));
+                            CurrentArrowsLists.Push(newList);                            
+                        }
+                    }
+                }
+            }
+        }
+
+        public Vector2 GetNear(Vector2 place, Direction direction)
+        {
+            var newloc = Vector2.Add(place, direction.GetShift());
+            if (newloc.X < 0)
+                newloc.X = 19 + newloc.X;
+            if (newloc.X > 18)
+                newloc.X = 19 - newloc.X;
+            if (newloc.Y < 0)
+                newloc.Y = 10 + newloc.Y;
+            if (newloc.Y > 9)
+                newloc.Y = 10 - newloc.Y;
+            //Location = Vector2.Add(Location, Direction.GetShift());
+            return newloc;
+        }
 
     }
 }
