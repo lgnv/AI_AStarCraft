@@ -35,6 +35,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         {
             Problem = problem;
             ParentSolution = parentSolution;
+            GetResult();
         }
 
         public AStarCraftSolution GetResult()
@@ -89,13 +90,14 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             improvementsCount = 0;
             ShouldContinue = true;
             var steps = new List<AStarCraftSolution>();
-            steps.Add(baseSolver.GetSolutions(problem, new HashSet<Arrow>()).Last());
+            steps.Add(baseSolver.GetSolutions(problem, new HashSet<Arrow>()).OrderBy(x => x.Score).Last());
+            Console.WriteLine(steps[0].Score);
             var timer = Stopwatch.StartNew();
             try
             {
                 while (true)
                 {
-                    //if (timer.ElapsedMilliseconds > 1000) throw new TimeoutException();
+                    if (timer.ElapsedMilliseconds > 1000) throw new TimeoutException();
                     var improvements = Improve(problem, steps.Last());
                     mutationsCount++;
                     foreach (var solution in improvements)
