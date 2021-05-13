@@ -39,11 +39,10 @@ namespace AI_AStarCraft.Simulations.AStarCraft
             return map;
         }
 
-        public static Map ParseMap(string json)
+        public static Map ParseMap(string mapString, List<string> robotsStrings)
         {
-            var dto = JsonSerializer.Deserialize<MapDto>(json);
-            var map = ParseCells(dto.Map);
-            var robots = dto.Robots.Select(Automaton2000.Create);
+            var map = ParseCells(mapString);
+            var robots = robotsStrings.Select(Automaton2000.Create);
             return new Map(robots, map);
         }
 

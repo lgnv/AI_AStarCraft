@@ -22,7 +22,7 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public void Play(Map map)
         {
             var problem = new AStarCraftProblem(map);
-            var solution = new AStarCraftSolver().GetSolutions(problem).First();
+            var solution = new AStarCraftSolver().GetSolutions(problem, new System.Collections.Generic.HashSet<Arrow>()).First();
 
             ApplySolution(solution, map);
             

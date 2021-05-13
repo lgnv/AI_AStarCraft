@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Numerics;
 using AI_AStarCraft.Algorithms;
 
 namespace AI_AStarCraft.Simulations.AStarCraft
@@ -8,10 +10,13 @@ namespace AI_AStarCraft.Simulations.AStarCraft
         public double Score { get; }
         public Arrow[] Arrows { get; }
 
-        public AStarCraftSolution(Arrow[] arrows, double score)
+        public IEnumerable<HashSet<Arrow>> NextArrows;
+
+        public AStarCraftSolution(Arrow[] arrows, double score, IEnumerable<HashSet<Arrow>> nextArrows)
         {
             Arrows = arrows;
             Score = score;
+            NextArrows = nextArrows;
         }
     }
 }

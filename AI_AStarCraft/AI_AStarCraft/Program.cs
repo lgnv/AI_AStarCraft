@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using AI_AStarCraft.Helpers;
 using AI_AStarCraft.Simulations.AStarCraft;
 
@@ -44,28 +45,48 @@ namespace AI_AStarCraft
 ";
         static void Main(string[] args)
         {
-            var input = "...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#";
-            var newinL = new List<String>();
-            for (var i = 0; i < input.Length; i+=19)
-            {
-                var part = input.Substring(i, 19);
-                newinL.Add(part);
-            }
-            var newin = string.Join("\\n", newinL);
-            Console.WriteLine(string.Join("\\n", newinL));
-
-
-            var testJson16 = @"
-        {
-            ""Map"": """ + newin + @""",
-            ""Robots"": [ ""1 0 R"", ""17 0 D"", ""1 8 U"", ""17 8 L"" ]
-        }
-";
-            //Console.WriteLine(testJson3);
-            //Console.WriteLine(testJson16);
-            var map = Map.ParseMap(testJson16);
+            var input = "...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#...................#.#.#.#.#.#.#.#.#.#|1 0 R|17 0 D|1 8 U|17 8 L";
+            var m = new ProblemParcer();
+            var map = m.GetMapFromInput(input);
             var problem = new AStarCraftProblem(map);
-            var solution = new AStarCraftSolver().GetSolutions(problem);            
+            var solutions = new AStarCraftSolver().GetSolutions(problem, new HashSet<Arrow>());
+            foreach(var solution in solutions)
+            {
+                Console.WriteLine("score " + solution.Score + "new " + new List<HashSet<Arrow>>(solution.NextArrows).Count);
+            }
+            /*
+            var mutator = new AStarCraftMutator();
+            var mutation = mutator.Mutate(problem, solutions.OrderBy(x => x.Score).Last());
+            var newSolution = mutation.GetResult();
+            Console.WriteLine("new score " + newSolution.Score);
+            */
+            var solver = new AStarCraftHullClimbingSolver(new AStarCraftSolver(), new AStarCraftMutator(), false);
+            var newsolutions = solver.GetSolutions(new AStarCraftProblem(map));
+            foreach (var solution in newsolutions)
+            {
+                Console.WriteLine("all new score " + solution.Score + "new " + new List<HashSet<Arrow>>(solution.NextArrows).Count);
+            }
         }
     }
+
+        public class ProblemParcer
+        {
+
+            public Map GetMapFromInput(string input)
+            {                
+                var newinL = new List<String>();
+                for (var i = 0; i < 190; i += 19)
+                {
+                    var part = input.Substring(i, 19);
+                    newinL.Add(part);
+                }
+                var newin = string.Join('\n', newinL);       
+                var robotsString = input.Substring(190, input.Length - 190);
+                var robotsList = robotsString.Split('|', StringSplitOptions.RemoveEmptyEntries);           
+                var map = Map.ParseMap(newin, new List<String>(robotsList));
+            
+                return map;
+            }
+        }
+
 }
